@@ -1,0 +1,20 @@
+language: generic 
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t danjsiegel/react-test -f ./client/Dockerfile.dev ./client
+script:
+  - docker run -e CI=true danjsiegel/react-test npm test
+
+after_success:
+  - docker build -t danjsiegel/multi-client ./client
+  - docker build -t danjsiegel/multi-nginx ./nginx
+  - docker build -t danjsiegel/multi-server ./server
+  - docker build -t danjsiegel/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push danjsiegel/multi-client
+  - docker push danjsiegel/multi-nginx
+  - docker push danjsiegel/multi-server
+  - docker push danjsiegel/multi-worker
